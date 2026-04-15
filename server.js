@@ -4,20 +4,42 @@ const cors = require("cors");
 const { cleanupLegacyDemoData, initializePortalState } = require("./utils/hrState");
 
 const app = express();
+const port = process.env.PORT || 5000;
+const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI;
+
 app.use(express.json());
 app.use(cors());
 
-// connect DB
-mongoose.connect("mongodb://Akhilesh:Rajak%40123@localhost:27017/studentDB?authSource=admin")
-.then(async () => {
-  await initializePortalState();
-  await cleanupLegacyDemoData();
-  console.log("DB Connected");
-})
-.catch(err => console.log(err));
+mongoose.set("bufferCommands", false);
+
+app.get("/api/health", (_req, res) => {
+  res.json({
+    success: true,
+    dbState: mongoose.connection.readyState
+  });
+});
 
 // routes
 app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/hr", require("./routes/hrRoutes"));
 
-app.listen(5000, () => console.log("Server running on 5000"));
+const startServer = async () => {
+  if (!mongoUri) {
+    throw new Error("Missing MONGODB_URI (or MONGO_URI) environment variable");
+  }
+
+  await mongoose.connect(mongoUri, {
+    serverSelectionTimeoutMS: 10000
+  });
+
+  await initializePortalState();
+  await cleanupLegacyDemoData();
+
+  app.listen(port, () => console.log(`Server running on ${port}`));
+  console.log("DB Connected");
+};
+
+startServer().catch((error) => {
+  console.error("Failed to start server:", error.message);
+  process.exit(1);
+});
