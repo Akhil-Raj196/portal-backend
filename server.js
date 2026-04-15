@@ -28,18 +28,25 @@ const startServer = async () => {
     throw new Error("Missing MONGODB_URI (or MONGO_URI) environment variable");
   }
 
+  console.log("Connecting to MongoDB...");
   await mongoose.connect(mongoUri, {
     serverSelectionTimeoutMS: 10000
   });
+  console.log("MongoDB connection established.");
 
+  console.log("Initializing portal state...");
   await initializePortalState();
+  console.log("Portal state initialized.");
+
+  console.log("Cleaning legacy demo data...");
   await cleanupLegacyDemoData();
+  console.log("Legacy demo data cleanup complete.");
 
   app.listen(port, () => console.log(`Server running on ${port}`));
   console.log("DB Connected");
 };
 
 startServer().catch((error) => {
-  console.error("Failed to start server:", error.message);
+  console.error("Failed to start server:", error);
   process.exit(1);
 });
