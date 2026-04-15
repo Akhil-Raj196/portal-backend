@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: portal-backend
+    env: node
+    plan: free
+    rootDir: .
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: MONGODB_URI
+        sync: false

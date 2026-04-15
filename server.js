@@ -1,4 +1,4 @@
-require("dotenv").config();
+require("dotenv").config({ quiet: true });
 
 const express = require("express");
 const mongoose = require("mongoose");
@@ -7,7 +7,11 @@ const { cleanupLegacyDemoData, initializePortalState } = require("./utils/hrStat
 
 const app = express();
 const port = process.env.PORT || 5000;
-const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI;
+const mongoUri =
+  process.env.MONGODB_URI ||
+  process.env.MONGO_URI ||
+  process.env.DATABASE_URL ||
+  process.env.MONGODB_URL;
 
 app.use(express.json());
 app.use(cors());
@@ -27,7 +31,9 @@ app.use("/api/hr", require("./routes/hrRoutes"));
 
 const startServer = async () => {
   if (!mongoUri) {
-    throw new Error("Missing MONGODB_URI (or MONGO_URI) environment variable");
+    throw new Error(
+      "Missing MongoDB connection string. Set MONGODB_URI, MONGO_URI, DATABASE_URL, or MONGODB_URL in the service environment."
+    );
   }
 
   console.log("Connecting to MongoDB...");
