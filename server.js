@@ -17,13 +17,25 @@ const allowedOrigins = [
   process.env.CORS_ORIGIN,
   "https://p-dashboard.onrender.com",
   "http://localhost:3000"
-].filter(Boolean);
+]
+  .filter(Boolean)
+  .map((origin) => origin.replace(/\/$/, ""));
+const allowedOriginPatterns = [
+  /^https:\/\/[a-z0-9-]+\.onrender\.com$/i,
+  /^http:\/\/localhost(?::\d+)?$/i,
+  /^http:\/\/127\.0\.0\.1(?::\d+)?$/i
+];
 
 const corsOptions = {
   origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+    const normalizedOrigin = origin ? origin.replace(/\/$/, "") : origin;
+    const matchesKnownPattern =
+      normalizedOrigin && allowedOriginPatterns.some((pattern) => pattern.test(normalizedOrigin));
+
+    if (!normalizedOrigin || allowedOrigins.includes(normalizedOrigin) || matchesKnownPattern) {
       return callback(null, true);
     }
+    console.error(`CORS blocked for origin: ${origin}`);
     return callback(new Error(`CORS blocked for origin: ${origin}`));
   },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
